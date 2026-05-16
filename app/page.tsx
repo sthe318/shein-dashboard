@@ -1,607 +1,151 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-import app from "./firebase";
+import app from "../../firebase";
 
 import {
   getFirestore,
   collection,
-  addDoc,
-  onSnapshot,
-  deleteDoc,
-  doc,
-  updateDoc,
+  getDocs,
 } from "firebase/firestore";
 
-import { QRCodeCanvas } from "qrcode.react";
-
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
+import { useParams } from "next/navigation";
 
 const db = getFirestore(app);
 
-type OrderType = {
-  id?: string;
-  orderId: string;
-  code: string;
-  name: string;
-  phone: string;
-  address: string;
-  price: string;
-  image: string;
-  status: string;
-  createdAt: string;
-};
+export default function TrackOrder() {
 
-export default function Home() {
+  const params = useParams();
 
-  const [orders, setOrders] =
-    useState<OrderType[]>([]);
+  const id = params.id;
 
-  const [code, setCode] =
-    useState("");
+  const [order, setOrder] =
+    useState<any>(null);
 
-  const [name, setName] =
-    useState("");
-
-  const [phone, setPhone] =
-    useState("");
-
-  const [address, setAddress] =
-    useState("");
-
-  const [price, setPrice] =
-    useState("");
-
-  const [image, setImage] =
-    useState<string>("");
-
-  const [search, setSearch] =
-    useState("");
-
-  const [filter, setFilter] =
-    useState("All");
-
-  // جلب الطلبات
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
 
-    const unsub = onSnapshot(
-      collection(db, "orders"),
-      (snapshot) => {
+    async function getOrder() {
 
-        const list: OrderType[] = [];
+      const querySnapshot =
+        await getDocs(
+          collection(db, "orders")
+        );
 
-        snapshot.forEach((docu) => {
+      querySnapshot.forEach((doc) => {
 
-          list.push({
-            id: docu.id,
-            ...(docu.data() as OrderType),
-          });
+        const data = doc.data();
 
-        });
+        if (data.orderId === id) {
 
-        setOrders(list);
+          setOrder(data);
+        }
+      });
 
-      }
-    );
-
-    return () => unsub();
-
-  }, []);
-
-  // إضافة طلب
-
-  async function addOrder() {
-
-    if (
-      !code ||
-      !name ||
-      !phone ||
-      !address ||
-      !price
-    ) {
-
-      alert("املأ كل الحقول");
-
-      return;
+      setLoading(false);
     }
 
-    const orderId =
-      "ORD-" +
-      Math.random()
-        .toString(36)
-        .substring(2, 10)
-        .toUpperCase();
+    getOrder();
 
-    await addDoc(
-      collection(db, "orders"),
-      {
-        orderId,
-        code,
-        name,
-        phone,
-        address,
-        price,
-        image,
-        status: "Pending",
-        createdAt:
-          new Date().toLocaleDateString(),
-      }
-    );
+  }, [id]);
 
-    setCode("");
-    setName("");
-    setPhone("");
-    setAddress("");
-    setPrice("");
-    setImage("");
-  }
+  if (loading) {
 
-  // حذف الطلب
+    return (
 
-  async function deleteOrder(
-    id: string
-  ) {
-
-    await deleteDoc(
-      doc(db, "orders", id)
+      <main className="min-h-screen flex items-center justify-center bg-slate-950 text-white text-3xl font-bold">
+        Loading...
+      </main>
     );
   }
 
-  // تغيير الحالة
+  if (!order) {
 
-  async function changeStatus(
-    id: string,
-    current: string
-  ) {
+    return (
 
-    const newStatus =
-      current === "Pending"
-        ? "Shipping"
-        : current === "Shipping"
-        ? "Delivered"
-        : "Pending";
-
-    await updateDoc(
-      doc(db, "orders", id),
-      {
-        status: newStatus,
-      }
+      <main className="min-h-screen flex items-center justify-center bg-slate-950 text-white text-3xl font-bold">
+        Order Not Found
+      </main>
     );
   }
-
-  // تصدير Excel
-
-  function exportExcel() {
-
-    const worksheet =
-      XLSX.utils.json_to_sheet(
-        orders
-      );
-
-    const workbook =
-      XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      "Orders"
-    );
-
-    const excelBuffer =
-      XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
-
-    const data = new Blob(
-      [excelBuffer],
-      {
-        type:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
-      }
-    );
-
-    saveAs(data, "orders.xlsx");
-  }
-
-  // البحث والفلترة
-
-  const filteredOrders =
-    useMemo(() => {
-
-      return orders.filter((order) => {
-
-        const matchesSearch =
-          order.name
-            ?.toLowerCase()
-            .includes(
-              search.toLowerCase()
-            );
-
-        const matchesFilter =
-          filter === "All"
-            ? true
-            : order.status === filter;
-
-        return (
-          matchesSearch &&
-          matchesFilter
-        );
-      });
-
-    }, [orders, search, filter]);
-
-  // الإحصائيات
-
-  const totalOrders =
-    orders.length;
-
-  const deliveredOrders =
-    orders.filter(
-      (o) =>
-        o.status === "Delivered"
-    ).length;
-
-  const totalRevenue =
-    orders.reduce(
-      (sum, order) =>
-        sum +
-        Number(order.price || 0),
-      0
-    );
-
-  const totalProfit =
-    totalRevenue * 0.2;
 
   return (
 
-    <main className="min-h-screen bg-slate-950 text-white p-6 md:p-10">
+    <main className="min-h-screen bg-slate-950 text-white p-10 flex items-center justify-center">
 
-      {/* العنوان */}
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 max-w-xl w-full shadow-2xl">
 
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 mb-10">
+        <h1 className="text-5xl font-black mb-10 text-center">
+          Track Order
+        </h1>
 
-        <div>
+        {order.image && (
 
-          <h1 className="text-5xl md:text-6xl font-black">
-            Shein Dashboard
-          </h1>
+          <img
+            src={order.image}
+            alt="product"
+            className="w-full h-80 object-cover rounded-3xl mb-8"
+          />
 
-          <p className="text-slate-400 mt-3 text-lg">
-            Professional Order Dashboard
+        )}
+
+        <div className="space-y-5 text-xl">
+
+          <p>
+            👤 Customer:
+            <span className="font-bold ml-2">
+              {order.name}
+            </span>
+          </p>
+
+          <p>
+            🆔 Order ID:
+            <span className="font-bold ml-2 break-all">
+              {order.orderId}
+            </span>
+          </p>
+
+          <p>
+            📞 Phone:
+            <span className="font-bold ml-2">
+              {order.phone}
+            </span>
+          </p>
+
+          <p>
+            📍 Address:
+            <span className="font-bold ml-2">
+              {order.address}
+            </span>
+          </p>
+
+          <p>
+            💰 Price:
+            <span className="font-bold ml-2">
+              ${order.price}
+            </span>
           </p>
 
         </div>
 
-        <button
-          onClick={exportExcel}
-          className="bg-green-500 hover:bg-green-600 px-6 py-4 rounded-2xl text-lg font-bold"
-        >
-          Export Excel
-        </button>
+        <div className="mt-10 text-center">
 
-      </div>
-
-      {/* الإحصائيات */}
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-10">
-
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
-
-          <h2 className="text-xl font-bold">
-            Total Orders
-          </h2>
-
-          <p className="text-5xl mt-4 font-black">
-            {totalOrders}
-          </p>
-
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
-
-          <h2 className="text-xl font-bold">
-            Delivered
-          </h2>
-
-          <p className="text-5xl mt-4 font-black text-green-400">
-            {deliveredOrders}
-          </p>
-
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
-
-          <h2 className="text-xl font-bold">
-            Revenue
-          </h2>
-
-          <p className="text-5xl mt-4 font-black">
-            ${totalRevenue}
-          </p>
-
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
-
-          <h2 className="text-xl font-bold">
-            Profit
-          </h2>
-
-          <p className="text-5xl mt-4 font-black text-pink-400">
-            ${totalProfit}
-          </p>
-
-        </div>
-
-      </div>
-
-      {/* إضافة طلب */}
-
-      <div className="grid md:grid-cols-7 gap-4 mb-10">
-
-        <input
-          type="text"
-          placeholder="Order Code"
-          value={code}
-          onChange={(e) =>
-            setCode(e.target.value)
-          }
-          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white"
-        />
-
-        <input
-          type="text"
-          placeholder="Customer Name"
-          value={name}
-          onChange={(e) =>
-            setName(e.target.value)
-          }
-          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white"
-        />
-
-        <input
-          type="text"
-          placeholder="Phone"
-          value={phone}
-          onChange={(e) =>
-            setPhone(e.target.value)
-          }
-          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white"
-        />
-
-        <input
-          type="text"
-          placeholder="Address"
-          value={address}
-          onChange={(e) =>
-            setAddress(e.target.value)
-          }
-          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white"
-        />
-
-        <input
-          type="number"
-          placeholder="Price"
-          value={price}
-          onChange={(e) =>
-            setPrice(e.target.value)
-          }
-          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white"
-        />
-
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e: any) => {
-
-            const file =
-              e.target.files[0];
-
-            if (!file) return;
-
-            const reader =
-              new FileReader();
-
-            reader.onloadend =
-              () => {
-
-                setImage(
-                  reader.result as string
-                );
-
-              };
-
-            reader.readAsDataURL(file);
-
-          }}
-          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white"
-        />
-
-        <button
-          onClick={addOrder}
-          className="bg-pink-500 hover:bg-pink-600 rounded-2xl text-xl font-bold"
-        >
-          Add Order
-        </button>
-
-      </div>
-
-      {/* البحث */}
-
-      <div className="flex flex-col md:flex-row gap-4 mb-10">
-
-        <input
-          type="text"
-          placeholder="Search customer..."
-          value={search}
-          onChange={(e) =>
-            setSearch(e.target.value)
-          }
-          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white w-full"
-        />
-
-        <select
-          value={filter}
-          onChange={(e) =>
-            setFilter(e.target.value)
-          }
-          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white md:w-72"
-        >
-
-          <option>
-            All
-          </option>
-
-          <option>
-            Pending
-          </option>
-
-          <option>
-            Shipping
-          </option>
-
-          <option>
-            Delivered
-          </option>
-
-        </select>
-
-      </div>
-
-      {/* الطلبات */}
-
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
-
-        {filteredOrders.map((order) => (
-
-          <div
-            key={order.id}
-            className="bg-slate-900 border border-slate-800 rounded-3xl p-6"
+          <span
+            className={`px-8 py-4 rounded-3xl text-2xl font-black inline-block ${
+              order.status === "Pending"
+                ? "bg-yellow-500"
+                : order.status === "Shipping"
+                ? "bg-blue-500"
+                : "bg-green-500"
+            }`}
           >
+            {order.status}
+          </span>
 
-            {order.image && (
-
-              <img
-                src={order.image}
-                alt="product"
-                className="w-full h-72 object-cover rounded-2xl mb-5"
-              />
-
-            )}
-
-            <div className="flex items-center justify-between mb-5">
-
-              <h2 className="text-3xl font-black">
-                {order.name}
-              </h2>
-
-              <span className="bg-black px-4 py-2 rounded-xl text-sm">
-                {order.code}
-              </span>
-
-            </div>
-
-            <div className="space-y-3 text-lg">
-
-              <p>
-                🆔 {order.orderId}
-              </p>
-
-              <p>
-                📞 {order.phone}
-              </p>
-
-              <p>
-                📍 {order.address}
-              </p>
-
-              <p>
-                💰 ${order.price}
-              </p>
-
-              <p>
-                📅 {order.createdAt}
-              </p>
-
-            </div>
-
-            <div className="mt-5">
-
-              <span
-                className={`px-5 py-3 rounded-2xl text-white font-bold inline-block ${
-                  order.status === "Pending"
-                    ? "bg-yellow-500"
-                    : order.status === "Shipping"
-                    ? "bg-blue-500"
-                    : "bg-green-500"
-                }`}
-              >
-                {order.status}
-              </span>
-
-            </div>
-
-            {/* QR */}
-
-            <div className="mt-8 flex flex-col items-center justify-center bg-slate-800 rounded-3xl p-6">
-
-              <QRCodeCanvas
-                value={`https://shein-dashboard-pi.vercel.app/track/${order.orderId}`}
-                size={180}
-              />
-
-              <p className="text-sm mt-4 text-center break-all text-slate-300">
-
-                https://shein-dashboard-pi.vercel.app/track/{order.orderId}
-
-              </p>
-
-            </div>
-
-            {/* الأزرار */}
-
-            <div className="grid grid-cols-3 gap-3 mt-8">
-
-              <button
-                onClick={() =>
-                  changeStatus(
-                    order.id || "",
-                    order.status
-                  )
-                }
-                className="bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-2xl font-bold"
-              >
-                Status
-              </button>
-
-              <button
-                onClick={() =>
-                  deleteOrder(
-                    order.id || ""
-                  )
-                }
-                className="bg-red-500 hover:bg-red-600 text-white py-3 rounded-2xl font-bold"
-              >
-                Delete
-              </button>
-
-              <a
-                href={`https://wa.me/${order.phone}`}
-                target="_blank"
-                className="bg-green-500 hover:bg-green-600 text-white py-3 rounded-2xl font-bold text-center"
-              >
-                WhatsApp
-              </a>
-
-            </div>
-
-          </div>
-
-        ))}
+        </div>
 
       </div>
 
