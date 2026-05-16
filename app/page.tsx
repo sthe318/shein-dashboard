@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import app from "../../firebase";
+import app from "@/app/firebase";
 
 import {
   getFirestore,
