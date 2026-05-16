@@ -83,6 +83,7 @@ export default function Home() {
         });
 
         setOrders(list);
+
       }
     );
 
@@ -138,7 +139,7 @@ export default function Home() {
     setImage("");
   }
 
-  // حذف طلب
+  // حذف الطلب
 
   async function deleteOrder(
     id: string
@@ -171,7 +172,7 @@ export default function Home() {
     );
   }
 
-  // Excel Export
+  // تصدير Excel
 
   function exportExcel() {
 
@@ -244,18 +245,6 @@ export default function Home() {
         o.status === "Delivered"
     ).length;
 
-  const shippingOrders =
-    orders.filter(
-      (o) =>
-        o.status === "Shipping"
-    ).length;
-
-  const pendingOrders =
-    orders.filter(
-      (o) =>
-        o.status === "Pending"
-    ).length;
-
   const totalRevenue =
     orders.reduce(
       (sum, order) =>
@@ -269,7 +258,7 @@ export default function Home() {
 
   return (
 
-    <main className="min-h-screen bg-gray-950 text-white p-6 md:p-10">
+    <main className="min-h-screen bg-slate-950 text-white p-6 md:p-10">
 
       {/* العنوان */}
 
@@ -281,8 +270,8 @@ export default function Home() {
             Shein Dashboard
           </h1>
 
-          <p className="text-gray-400 mt-3 text-lg">
-            Professional Order Management System
+          <p className="text-slate-400 mt-3 text-lg">
+            Professional Order Dashboard
           </p>
 
         </div>
@@ -298,9 +287,9 @@ export default function Home() {
 
       {/* الإحصائيات */}
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-5 mb-10">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-10">
 
-        <div className="bg-white text-black p-6 rounded-3xl shadow-lg">
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
 
           <h2 className="text-xl font-bold">
             Total Orders
@@ -312,54 +301,38 @@ export default function Home() {
 
         </div>
 
-        <div className="bg-white text-black p-6 rounded-3xl shadow-lg">
-
-          <h2 className="text-xl font-bold">
-            Pending
-          </h2>
-
-          <p className="text-5xl mt-4 font-black text-yellow-500">
-            {pendingOrders}
-          </p>
-
-        </div>
-
-        <div className="bg-white text-black p-6 rounded-3xl shadow-lg">
-
-          <h2 className="text-xl font-bold">
-            Shipping
-          </h2>
-
-          <p className="text-5xl mt-4 font-black text-blue-500">
-            {shippingOrders}
-          </p>
-
-        </div>
-
-        <div className="bg-white text-black p-6 rounded-3xl shadow-lg">
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
 
           <h2 className="text-xl font-bold">
             Delivered
           </h2>
 
-          <p className="text-5xl mt-4 font-black text-green-500">
+          <p className="text-5xl mt-4 font-black text-green-400">
             {deliveredOrders}
           </p>
 
         </div>
 
-        <div className="bg-white text-black p-6 rounded-3xl shadow-lg">
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
 
           <h2 className="text-xl font-bold">
             Revenue
           </h2>
 
-          <p className="text-4xl mt-4 font-black">
+          <p className="text-5xl mt-4 font-black">
             ${totalRevenue}
           </p>
 
-          <p className="mt-3 text-green-600 font-bold">
-            Profit: ${totalProfit}
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
+
+          <h2 className="text-xl font-bold">
+            Profit
+          </h2>
+
+          <p className="text-5xl mt-4 font-black text-pink-400">
+            ${totalProfit}
           </p>
 
         </div>
@@ -368,104 +341,96 @@ export default function Home() {
 
       {/* إضافة طلب */}
 
-      <div className="bg-gray-900 border border-gray-800 p-6 rounded-3xl mb-10">
+      <div className="grid md:grid-cols-7 gap-4 mb-10">
 
-        <h2 className="text-3xl font-bold mb-6">
-          Add New Order
-        </h2>
+        <input
+          type="text"
+          placeholder="Order Code"
+          value={code}
+          onChange={(e) =>
+            setCode(e.target.value)
+          }
+          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white"
+        />
 
-        <div className="grid md:grid-cols-7 gap-4">
+        <input
+          type="text"
+          placeholder="Customer Name"
+          value={name}
+          onChange={(e) =>
+            setName(e.target.value)
+          }
+          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white"
+        />
 
-          <input
-            type="text"
-            placeholder="Order Code"
-            value={code}
-            onChange={(e) =>
-              setCode(e.target.value)
-            }
-            className="p-4 rounded-2xl text-black"
-          />
+        <input
+          type="text"
+          placeholder="Phone"
+          value={phone}
+          onChange={(e) =>
+            setPhone(e.target.value)
+          }
+          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white"
+        />
 
-          <input
-            type="text"
-            placeholder="Customer Name"
-            value={name}
-            onChange={(e) =>
-              setName(e.target.value)
-            }
-            className="p-4 rounded-2xl text-black"
-          />
+        <input
+          type="text"
+          placeholder="Address"
+          value={address}
+          onChange={(e) =>
+            setAddress(e.target.value)
+          }
+          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white"
+        />
 
-          <input
-            type="text"
-            placeholder="Phone"
-            value={phone}
-            onChange={(e) =>
-              setPhone(e.target.value)
-            }
-            className="p-4 rounded-2xl text-black"
-          />
+        <input
+          type="number"
+          placeholder="Price"
+          value={price}
+          onChange={(e) =>
+            setPrice(e.target.value)
+          }
+          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white"
+        />
 
-          <input
-            type="text"
-            placeholder="Address"
-            value={address}
-            onChange={(e) =>
-              setAddress(e.target.value)
-            }
-            className="p-4 rounded-2xl text-black"
-          />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e: any) => {
 
-          <input
-            type="number"
-            placeholder="Price"
-            value={price}
-            onChange={(e) =>
-              setPrice(e.target.value)
-            }
-            className="p-4 rounded-2xl text-black"
-          />
+            const file =
+              e.target.files[0];
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e: any) => {
+            if (!file) return;
 
-              const file =
-                e.target.files[0];
+            const reader =
+              new FileReader();
 
-              if (!file) return;
+            reader.onloadend =
+              () => {
 
-              const reader =
-                new FileReader();
+                setImage(
+                  reader.result as string
+                );
 
-              reader.onloadend =
-                () => {
+              };
 
-                  setImage(
-                    reader.result as string
-                  );
+            reader.readAsDataURL(file);
 
-                };
+          }}
+          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white"
+        />
 
-              reader.readAsDataURL(file);
-
-            }}
-            className="p-4 rounded-2xl bg-white text-black"
-          />
-
-          <button
-            onClick={addOrder}
-            className="bg-pink-500 hover:bg-pink-600 rounded-2xl text-xl font-bold"
-          >
-            Add Order
-          </button>
-
-        </div>
+        <button
+          onClick={addOrder}
+          className="bg-pink-500 hover:bg-pink-600 rounded-2xl text-xl font-bold"
+        >
+          Add Order
+        </button>
 
       </div>
 
-      {/* البحث والفلترة */}
+      {/* البحث */}
 
       <div className="flex flex-col md:flex-row gap-4 mb-10">
 
@@ -476,7 +441,7 @@ export default function Home() {
           onChange={(e) =>
             setSearch(e.target.value)
           }
-          className="p-4 rounded-2xl text-black w-full"
+          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white w-full"
         />
 
         <select
@@ -484,7 +449,7 @@ export default function Home() {
           onChange={(e) =>
             setFilter(e.target.value)
           }
-          className="p-4 rounded-2xl text-black md:w-72"
+          className="p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white md:w-72"
         >
 
           <option>
@@ -515,7 +480,7 @@ export default function Home() {
 
           <div
             key={order.id}
-            className="bg-white text-black rounded-3xl p-6 shadow-2xl"
+            className="bg-slate-900 border border-slate-800 rounded-3xl p-6"
           >
 
             {order.image && (
@@ -528,13 +493,13 @@ export default function Home() {
 
             )}
 
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-5">
 
               <h2 className="text-3xl font-black">
                 {order.name}
               </h2>
 
-              <span className="bg-black text-white px-4 py-2 rounded-xl text-sm">
+              <span className="bg-black px-4 py-2 rounded-xl text-sm">
                 {order.code}
               </span>
 
@@ -547,10 +512,6 @@ export default function Home() {
               </p>
 
               <p>
-                📅 {order.createdAt}
-              </p>
-
-              <p>
                 📞 {order.phone}
               </p>
 
@@ -560,6 +521,10 @@ export default function Home() {
 
               <p>
                 💰 ${order.price}
+              </p>
+
+              <p>
+                📅 {order.createdAt}
               </p>
 
             </div>
@@ -582,14 +547,14 @@ export default function Home() {
 
             {/* QR */}
 
-            <div className="mt-8 flex flex-col items-center justify-center bg-gray-100 rounded-3xl p-6">
+            <div className="mt-8 flex flex-col items-center justify-center bg-slate-800 rounded-3xl p-6">
 
               <QRCodeCanvas
                 value={`https://shein-dashboard-pi.vercel.app/track/${order.orderId}`}
                 size={180}
               />
 
-              <p className="text-sm mt-4 text-center break-all">
+              <p className="text-sm mt-4 text-center break-all text-slate-300">
 
                 https://shein-dashboard-pi.vercel.app/track/{order.orderId}
 
